@@ -1,0 +1,549 @@
+package devstudy.net.basics_of_programming_tic_tac_toe.gomoku;
+
+import java.awt.Color;
+import java.awt.Font;
+
+import javax.swing.JLabel;
+
+/**
+ * @author devstudy
+ * // @see http://devstudy.net
+ */
+public class Gomoku {
+    public static int SIZE = 15;
+    public static int WIN_COUNT = 5;
+    public static char EMPTY = ' ';
+    public static char HUMAN = 'X';
+    public static char COMPUTER = 'O';
+
+    public static char[][] gameTable = new char[SIZE][SIZE];
+    public static JLabel cells[][];
+
+    public static int count = 0;
+    public static int[][] winningCoordinates = new int[WIN_COUNT][2];
+
+    public static void init() {
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                gameTable[i][j] = EMPTY;
+            }
+        }
+    }
+
+    public static void makeTurn(int i, int j, char figure) {
+        gameTable[i][j] = figure;
+        drawFigure(i, j);
+    }
+
+    public static void drawFigure(int i, int j) {
+        cells[i][j].setText(String.valueOf(gameTable[i][j]));
+    }
+
+    public static boolean isCellFree(int i, int j) {
+        return gameTable[i][j] == EMPTY;
+    }
+
+    public static void makeHumanTurn(int i, int j) {
+        makeTurn(i, j, HUMAN);
+    }
+
+    public static boolean hasEmptyCells() {
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                if (gameTable[i][j] == EMPTY) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static void clear() {
+        count = 0;
+    }
+
+    public static void addWinningCoordinate(int row, int col) {
+        winningCoordinates[count][0] = row;
+        winningCoordinates[count][1] = col;
+        count++;
+    }
+
+    public static void markWinningCombinationByRedColor() {
+        for (int k = 0; k < WIN_COUNT; k++) {
+            int row = winningCoordinates[k][0];
+            int col = winningCoordinates[k][1];
+            cells[row][col].setForeground(Color.RED);
+            cells[row][col].setFont(new Font(Font.SERIF, Font.BOLD, 35));
+        }
+    }
+
+    public static void makeComputerTurn() {
+        for (int countFigure = WIN_COUNT - 1, countEmpty = 1; countFigure > 0 && countEmpty < WIN_COUNT; countFigure--, countEmpty++) {
+            if (computerTriesToWins(COMPUTER, countFigure, countEmpty)) {
+                return;
+            } else if (computerTriesToStopToWin(HUMAN, countFigure, countEmpty)) {
+                return;
+            }
+        }
+        computerProgressInAnyCell();
+    }
+
+    private static boolean computerTriesToWins(char figure, int countFigure, int countEmpty) {
+        if (findCountFigureByRowsAndTurn(figure, countFigure, countEmpty)) {
+            return true;
+        }
+        if (findCountFigureByColsAndTurn(figure, countFigure, countEmpty)) {
+            return true;
+        }
+        if (findCountFigureByMainDiagonalsAndTurn(figure, countFigure, countEmpty)) {
+            return true;
+        }
+        if (findCountFigureBySecondDiagonalsAndTurn(figure, countFigure, countEmpty)) {
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean computerTriesToStopToWin(char figure, int countFigure, int countEmpty) {
+        if (findCountFigureByRowsAndTurn(figure, countFigure, countEmpty)) {
+            return true;
+        }
+        if (findCountFigureByColsAndTurn(figure, countFigure, countEmpty)) {
+            return true;
+        }
+        if (findCountFigureByMainDiagonalsAndTurn(figure, countFigure, countEmpty)) {
+            return true;
+        }
+        if (findCountFigureBySecondDiagonalsAndTurn(figure, countFigure, countEmpty)) {
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean findCountFigureBySecondDiagonalsAndTurn(char figure, int countFigure, int countEmpty) {
+        if (findCountFigureByUpSecondDiagonalsAndTurn(figure, countFigure, countEmpty)) return true;
+        if (findCountFigureByDownSecondDiagonalsAndTurn(figure, countFigure, countEmpty)) return true;
+        return false;
+    }
+
+    public static boolean findCountFigureByDownSecondDiagonalsAndTurn(char figure, int countFigure, int countEmpty) {
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j <= SIZE - WIN_COUNT; j++) {
+                int findEmptyFirstIndexI = 0;
+                int findEmpyFirstIndexJ = 0;
+                int findEmptyLastIndexI = 0;
+                int findEmptyLastIndexJ = 0;
+                int findFigureCount = 0;
+                int findEmptyCount = 0;
+                for (int k = j; k < j + WIN_COUNT; k++) {
+                    if (k + i < SIZE) {
+                        if (gameTable[k + i][SIZE - k - 1] == EMPTY || gameTable[k + i][SIZE - k - 1] == figure) {
+                            if (gameTable[k + i][SIZE - k - 1] == figure) {
+                                findFigureCount++;
+                            }
+                            if (gameTable[k + i][SIZE - k - 1] == EMPTY) {
+                                findEmptyCount++;
+                                findEmptyLastIndexI = k + i;
+                                findEmptyLastIndexJ = SIZE - k - 1;
+                            }
+                            if (findEmptyCount == 1) {
+                                findEmptyFirstIndexI = k + i;
+                                findEmpyFirstIndexJ = SIZE - k - 1;
+                            }
+                        }
+                        if (findFigureCount == countFigure && findEmptyCount == countEmpty) {
+                            if (gameTable[findEmptyLastIndexI][findEmptyLastIndexJ] == EMPTY) {
+                                makeTurn(findEmptyLastIndexI, findEmptyLastIndexJ, COMPUTER);
+                                return true;
+                            } else if (gameTable[findEmptyFirstIndexI][findEmpyFirstIndexJ] == EMPTY) {
+                                makeTurn(findEmptyFirstIndexI, findEmpyFirstIndexJ, COMPUTER);
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean findCountFigureByUpSecondDiagonalsAndTurn(char figure, int countFigure, int countEmpty) {
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE - WIN_COUNT; j++) {
+                int findEmptyFirstIndexI = 0;
+                int findEmpyFirstIndexJ = 0;
+                int findEmptyLastIndexI = 0;
+                int findEmptyLastIndexJ = 0;
+                int findFigureCount = 0;
+                int findEmptyCount = 0;
+                for (int k = j; k < j + WIN_COUNT; k++) {
+                    if (k + i < SIZE) {
+                        if (gameTable[k][SIZE - k - i - 1] == EMPTY || gameTable[k][SIZE - k - i - 1] == figure) {
+                            if (gameTable[k][SIZE - k - i - 1] == figure) {
+                                findFigureCount++;
+                            }
+                            if (gameTable[k][SIZE - k - i - 1] == EMPTY) {
+                                findEmptyCount++;
+                                findEmptyLastIndexI = k;
+                                findEmptyLastIndexJ = SIZE - k - i - 1;
+                            }
+                            if (findEmptyCount == 1) {
+                                findEmptyFirstIndexI = k;
+                                findEmpyFirstIndexJ = SIZE - k - i - 1;
+                            }
+                        }
+                        if (findFigureCount == countFigure && findEmptyCount == countEmpty) {
+                            if (gameTable[findEmptyLastIndexI][findEmptyLastIndexJ] == EMPTY) {
+                                makeTurn(findEmptyLastIndexI, findEmptyLastIndexJ, COMPUTER);
+                                return true;
+                            } else if (gameTable[findEmptyFirstIndexI][findEmpyFirstIndexJ] == EMPTY) {
+                                makeTurn(findEmptyFirstIndexI, findEmpyFirstIndexJ, COMPUTER);
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean findCountFigureByMainDiagonalsAndTurn(char figure, int countFigure, int countEmpty) {
+        if (findCountFigureByUpMainDiagonalsAndTurn(figure, countFigure, countEmpty)) return true;
+        if (findCountFigureByDownMainDiagonalsAndTurn(figure, countFigure, countEmpty)) return true;
+        return false;
+    }
+
+    public static boolean findCountFigureByDownMainDiagonalsAndTurn(char figure, int countFigure, int countEmpty) {
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j <= SIZE - WIN_COUNT; j++) {
+                int findEmptyFirstIndexI = 0;
+                int findEmpyFirstIndexJ = 0;
+                int findEmptyLastIndexI = 0;
+                int findEmptyLastIndexJ = 0;
+                int findFigureCount = 0;
+                int findEmptyCount = 0;
+                for (int k = j; k < j + WIN_COUNT; k++) {
+                    if (k + i < SIZE) {
+                        if (gameTable[k + i][k] == EMPTY || gameTable[k + i][k] == figure) {
+                            if (gameTable[k + i][k] == figure) {
+                                findFigureCount++;
+                            }
+                            if (gameTable[k + i][k] == EMPTY) {
+                                findEmptyCount++;
+                                findEmptyLastIndexI = k + i;
+                                findEmptyLastIndexJ = k;
+                            }
+                            if (findEmptyCount == 1) {
+                                findEmptyFirstIndexI = k + i;
+                                findEmpyFirstIndexJ = k;
+                            }
+                        }
+                        if (findFigureCount == countFigure && findEmptyCount == countEmpty) {
+                            if (gameTable[findEmptyLastIndexI][findEmptyLastIndexJ] == EMPTY) {
+                                makeTurn(findEmptyLastIndexI, findEmptyLastIndexJ, COMPUTER);
+                                return true;
+                            } else if (gameTable[findEmptyFirstIndexI][findEmpyFirstIndexJ] == EMPTY) {
+                                makeTurn(findEmptyFirstIndexI, findEmpyFirstIndexJ, COMPUTER);
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean findCountFigureByUpMainDiagonalsAndTurn(char figure, int countFigure, int countEmpty) {
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE - WIN_COUNT; j++) {
+                int findEmptyFirstIndexI = 0;
+                int findEmpyFirstIndexJ = 0;
+                int findEmptyLastIndexI = 0;
+                int findEmptyLastIndexJ = 0;
+                int findFigureCount = 0;
+                int findEmptyCount = 0;
+                for (int k = j; k < j + WIN_COUNT; k++) {
+                    if (k + i < SIZE) {
+                        if (gameTable[k][k + i] == EMPTY || gameTable[k][k + i] == figure) {
+                            if (gameTable[k][k + i] == figure) {
+                                findFigureCount++;
+                            }
+                            if (gameTable[k][k + i] == EMPTY) {
+                                findEmptyCount++;
+                                findEmptyLastIndexI = k;
+                                findEmptyLastIndexJ = k + i;
+                            }
+                            if (findEmptyCount == 1) {
+                                findEmptyFirstIndexI = k + 1;
+                                findEmpyFirstIndexJ = k + i + 1;
+                            }
+                        }
+                        if (findFigureCount == countFigure && findEmptyCount == countEmpty) {
+                            if (gameTable[findEmptyLastIndexI][findEmptyLastIndexJ] == EMPTY) {
+                                makeTurn(findEmptyLastIndexI, findEmptyLastIndexJ, COMPUTER);
+                                return true;
+                            } else if (gameTable[findEmptyFirstIndexI][findEmpyFirstIndexJ] == EMPTY) {
+                                makeTurn(findEmptyFirstIndexI, findEmpyFirstIndexJ, COMPUTER);
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean findCountFigureByColsAndTurn(char figure, int countFigure, int countEmpty) {
+        for (int i = 0; i <= SIZE - WIN_COUNT; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                int findEmptyFirstIndexI = 0;
+                int findEmpyFirstIndexJ = 0;
+                int findEmptyLastIndexI = 0;
+                int findEmptyLastIndexJ = 0;
+                int findFigureCount = 0;
+                int findEmptyCount = 0;
+                for (int k = i; k < i + WIN_COUNT; k++) {
+                    if (gameTable[k][j] == EMPTY || gameTable[k][j] == figure) {
+                        if (gameTable[k][j] == figure) {
+                            findFigureCount++;
+                        }
+                        if (gameTable[k][j] == EMPTY) {
+                            findEmptyCount++;
+                            findEmptyLastIndexI = k;
+                            findEmptyLastIndexJ = j;
+                        }
+                        if (findEmptyCount == 1) {
+                            findEmptyFirstIndexI = k;
+                            findEmpyFirstIndexJ = j;
+                        }
+                    }
+                    if (findFigureCount == countFigure && findEmptyCount == countEmpty) {
+                        if (gameTable[findEmptyLastIndexI][findEmptyLastIndexJ] == EMPTY) {
+                            makeTurn(findEmptyLastIndexI, findEmptyLastIndexJ, COMPUTER);
+                            return true;
+                        } else if (gameTable[findEmptyFirstIndexI][findEmpyFirstIndexJ] == EMPTY) {
+                            makeTurn(findEmptyFirstIndexI, findEmpyFirstIndexJ, COMPUTER);
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean findCountFigureByRowsAndTurn(char figure, int countFigure, int countEmpty) {
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j <= SIZE - WIN_COUNT; j++) {
+                int findEmptyFirstIndexI = 0;
+                int findEmpyFirstIndexJ = 0;
+                int findEmptyLastIndexI = 0;
+                int findEmptyLastIndexJ = 0;
+                int findFigureCount = 0;
+                int findEmptyCount = 0;
+                for (int k = j; k < j + WIN_COUNT; k++) {
+                    if (gameTable[i][k] == EMPTY || gameTable[i][k] == figure) {
+                        if (gameTable[i][k] == figure) {
+                            findFigureCount++;
+                        }
+                        if (gameTable[i][k] == EMPTY) {
+                            findEmptyCount++;
+                            findEmptyLastIndexI = i;
+                            findEmptyLastIndexJ = k;
+                        }
+                        if (findEmptyCount == 1) {
+                            findEmptyFirstIndexI = i;
+                            findEmpyFirstIndexJ = k;
+                        }
+                    }
+                    if (findFigureCount == countFigure && findEmptyCount == countEmpty) {
+                        if (gameTable[findEmptyLastIndexI][findEmptyLastIndexJ] == EMPTY) {
+                            makeTurn(findEmptyLastIndexI, findEmptyLastIndexJ, COMPUTER);
+                            return true;
+                        } else if (gameTable[findEmptyFirstIndexI][findEmpyFirstIndexJ] == EMPTY) {
+                            makeTurn(findEmptyFirstIndexI, findEmpyFirstIndexJ, COMPUTER);
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private static void computerProgressInAnyCell() {
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                if (gameTable[i][j] == EMPTY) {
+                    makeTurn(i, j, COMPUTER);
+                }
+            }
+        }
+    }
+
+    public static boolean findWinner(char figure) {
+        if (findWinnerByRows(figure)) {
+            return true;
+        } else if (findWinnerByCols(figure)) {
+            return true;
+        } else if (findWinnerByMainDiagonals(figure)) {
+            return true;
+        } else if (findWinnerBySecondDiagonals(figure)) {
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean findWinnerBySecondDiagonals(char figure) {
+        if (findWinnerByUpSecondDiagonals(figure)) return true;
+        if (findWinnerByDownSecondDiagonals(figure)) return true;
+        return false;
+    }
+
+    public static boolean findWinnerByDownSecondDiagonals(char figure) {
+        for (int i = 0; i < SIZE; i++) {
+            clear();
+            int count = 0;
+            for (int j = 0; j < SIZE; j++) {
+                if (j + i < SIZE) {
+                    if (gameTable[j + i][SIZE - j - 1] == figure) {
+                        addWinningCoordinate(j + i, SIZE - j - 1);
+                        count++;
+                    } else {
+                        clear();
+                        count = 0;
+                    }
+                    if (count == WIN_COUNT) {
+                        markWinningCombinationByRedColor();
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean findWinnerByUpSecondDiagonals(char figure) {
+        for (int i = 0; i < SIZE; i++) {
+            clear();
+            int count = 0;
+            for (int j = 0; j < SIZE; j++) {
+                if (j + i < SIZE) {
+                    if (gameTable[j][SIZE - j - i - 1] == figure) {
+                        addWinningCoordinate(j, SIZE - j - i - 1);
+                        count++;
+                    } else {
+                        clear();
+                        count = 0;
+                    }
+                    if (count == WIN_COUNT) {
+                        markWinningCombinationByRedColor();
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean findWinnerByMainDiagonals(char figure) {
+        if (findWinnerByUpMainDiagonals(figure)) return true;
+        if (findWinnerByDownMainDiagonals(figure)) return true;
+        return false;
+    }
+
+    public static boolean findWinnerByDownMainDiagonals(char figure) {
+        for (int i = 0; i < SIZE; i++) {
+            clear();
+            int count = 0;
+            for (int j = 0; j < SIZE; j++) {
+                if (j + i < SIZE) {
+                    if (gameTable[j + i][j] == figure) {
+                        addWinningCoordinate(j + i, j);
+                        count++;
+                    } else {
+                        clear();
+                        count = 0;
+                    }
+                    if (count == WIN_COUNT) {
+                        markWinningCombinationByRedColor();
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean findWinnerByUpMainDiagonals(char figure) {
+        for (int i = 0; i < SIZE; i++) {
+            clear();
+            int count = 0;
+            for (int j = 0; j < SIZE; j++) {
+                if (j + i < SIZE) {
+                    if (gameTable[j][j + i] == figure) {
+                        addWinningCoordinate(j, j + i);
+                        count++;
+                    } else {
+                        clear();
+                        count = 0;
+                    }
+                    if (count == WIN_COUNT) {
+                        markWinningCombinationByRedColor();
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean findWinnerByRows(char figure) {
+        for (int i = 0; i < SIZE; i++) {
+            clear();
+            int count = 0;
+            for (int j = 0; j < SIZE; j++) {
+                if (gameTable[i][j] == figure) {
+                    addWinningCoordinate(i, j);
+                    count++;
+                } else {
+                    clear();
+                    count = 0;
+                }
+                if (count == WIN_COUNT) {
+                    markWinningCombinationByRedColor();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean findWinnerByCols(char figure) {
+        for (int i = 0; i < SIZE; i++) {
+            clear();
+            int count = 0;
+            for (int j = 0; j < SIZE; j++) {
+                if (gameTable[j][i] == figure) {
+                    addWinningCoordinate(j, i);
+                    count++;
+                } else {
+                    clear();
+                    count = 0;
+                }
+                if (count == WIN_COUNT) {
+                    markWinningCombinationByRedColor();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static void main(String[] args) {
+        GUIGomoku.main(args);
+    }
+}
